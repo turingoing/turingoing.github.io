@@ -1231,7 +1231,7 @@
                     一对一因材施教 · 终身免费答疑<br>
                     带你亲手制作专属绝美藏装
                 </div>
-                <div class="cta-button">立即咨询</div>
+                <div class="cta-button" id="ctaIntroBtn">立即咨询</div>
                 <div class="cta-footer">藏 装 精 工 缝 纫 专 业 课</div>
             </div>
 
@@ -1343,25 +1343,52 @@
         document.querySelectorAll('.nav-item').forEach(function(item) {
             item.addEventListener('click', function() {
                 closeDrawer();
-                // 切换导航激活状态
+                const target = this.getAttribute('data-target');
+                goToSection(target, this);
+            });
+        });
+
+        /* 公共：切换到指定 section，并同步导航/通栏状态 */
+        function goToSection(sectionId, navItemToActivate) {
+            // 切换导航激活状态（若传入了要激活的导航项）
+            if (navItemToActivate) {
                 document.querySelectorAll('.nav-item').forEach(function(i) {
                     i.classList.remove('active');
                 });
-                this.classList.add('active');
-                // 切换内容区块
-                const target = this.getAttribute('data-target');
-                document.querySelectorAll('.page-section').forEach(function(sec) {
-                    sec.classList.remove('active');
-                });
-                const targetEl = document.getElementById(target);
-                if (targetEl) {
-                    targetEl.classList.add('active');
-                    window.scrollTo(0, 0);
+                navItemToActivate.classList.add('active');
+            } else {
+                /* 没传导航项时，根据 sectionId 找到匹配的导航项并激活 */
+                const matchNav = document.querySelector('.nav-item[data-target="' + sectionId + '"]');
+                if (matchNav) {
+                    document.querySelectorAll('.nav-item').forEach(function(i) {
+                        i.classList.remove('active');
+                    });
+                    matchNav.classList.add('active');
                 }
-                // 联系咨询页才显示底部通栏
-                refreshFooterBar(target);
+            }
+            // 切换内容区块
+            document.querySelectorAll('.page-section').forEach(function(sec) {
+                sec.classList.remove('active');
             });
-        });
+            const targetEl = document.getElementById(sectionId);
+            if (targetEl) {
+                targetEl.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+            // 联系咨询页才显示底部通栏
+            refreshFooterBar(sectionId);
+            // 切到联系咨询时初始化聊天并滚到底
+            if (sectionId === 'section-contact') {
+                setTimeout(function() {
+                    initChat();
+                    scrollChatBottom();
+                }, 60);
+            }
+            // 切到成品展示时初始化瀑布流
+            if (sectionId === 'section-gallery') {
+                setTimeout(initWaterfall, 60);
+            }
+        }
 
         /* 控制底部通栏显隐：只在联系咨询页面展示 */
         function refreshFooterBar(activeSectionId) {
@@ -1392,6 +1419,14 @@
                 refreshFooterBar(current.id);
             }
         });
+
+        /* 课程介绍页「立即咨询」按钮 → 跳转到联系咨询页面 */
+        const ctaIntroBtn = document.getElementById('ctaIntroBtn');
+        if (ctaIntroBtn) {
+            ctaIntroBtn.addEventListener('click', function() {
+                goToSection('section-contact');
+            });
+        }
 
         /* ===== 成品展示：双列瀑布流（奇偶交替分配 + 参差高度） ===== */
         const galleryData = [
