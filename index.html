@@ -754,14 +754,20 @@
         }
 
         /* ===== 联系咨询：聊天界面 ===== */
+        #section-contact {
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
         #section-contact .article {
             max-width: 680px;
             margin: 0 auto;
             background: #f5f0e8;
-            min-height: 100vh;
-            min-height: 100dvh;
+            height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         /* 顶部导航栏 AppBar */
@@ -917,6 +923,19 @@
             backdrop-filter: blur(6px);
             border-top: 1px solid #e8d5b5;
             box-shadow: 0 -2px 12px rgba(139, 26, 26, 0.08);
+            display: none;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .contact-footer-bar.show {
+            display: block;
+        }
+
+        .contact-footer-bar.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .contact-footer-btn {
@@ -954,17 +973,73 @@
             transform: scale(0.98);
         }
 
-        /* 给各页面底部留白，避免被通栏遮挡 */
-        .page-section .article {
-            padding-bottom: 86px;
-        }
-
+        /* 给页面底部留白，避免被通栏遮挡（仅联系咨询页启用底部通栏，chat-body单独处理） */
         #section-contact .article {
             padding-bottom: 0;
         }
 
         #section-contact .chat-body {
             padding-bottom: calc(24px + 86px);
+        }
+
+        /* ===== 联系老师弹窗 ===== */
+        .contact-dialog-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+        }
+
+        .contact-dialog-mask.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .contact-dialog-card {
+            width: 100%;
+            max-width: 340px;
+            background: #fff;
+            border-radius: 20px;
+            padding: 12px 4px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+            transform: scale(0.92);
+            opacity: 0;
+            transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s ease;
+        }
+
+        .contact-dialog-mask.show .contact-dialog-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .contact-dialog-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            gap: 12px;
+        }
+
+        .contact-dialog-label {
+            font-size: 14.5px;
+            color: #3d2b1f;
+            font-weight: 500;
+            line-height: 1.4;
+            word-break: break-all;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-dialog-label strong {
+            color: #8b1a1a;
+            font-weight: 700;
+            letter-spacing: 0.3px;
         }
     </style>
 </head>
@@ -1227,6 +1302,18 @@
         <button class="contact-footer-btn" id="contactFooterBtn">联系老师</button>
     </div>
 
+    <!-- 联系老师弹窗 -->
+    <div class="contact-dialog-mask" id="contactDialogMask">
+        <div class="contact-dialog-card" id="contactDialogCard">
+            <div class="contact-dialog-row">
+                <div class="contact-dialog-label">联系微信：<strong>xu963333aa</strong></div>
+            </div>
+            <div class="contact-dialog-row">
+                <div class="contact-dialog-label">联系电话：<strong>13330989470</strong></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const hamburger = document.getElementById('hamburger');
         const drawer = document.getElementById('drawer');
@@ -1271,7 +1358,39 @@
                     targetEl.classList.add('active');
                     window.scrollTo(0, 0);
                 }
+                // 联系咨询页才显示底部通栏
+                refreshFooterBar(target);
             });
+        });
+
+        /* 控制底部通栏显隐：只在联系咨询页面展示 */
+        function refreshFooterBar(activeSectionId) {
+            const bar = document.querySelector('.contact-footer-bar');
+            if (!bar) return;
+            const show = activeSectionId === 'section-contact';
+            if (show) {
+                bar.classList.add('show');
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        bar.classList.add('visible');
+                    });
+                });
+            } else {
+                bar.classList.remove('visible');
+                setTimeout(function() {
+                    if (!bar.classList.contains('visible')) {
+                        bar.classList.remove('show');
+                    }
+                }, 220);
+            }
+        }
+
+        /* 初始化时根据当前激活的页面决定是否显示通栏 */
+        document.addEventListener('DOMContentLoaded', function() {
+            const current = document.querySelector('.page-section.active');
+            if (current) {
+                refreshFooterBar(current.id);
+            }
         });
 
         /* ===== 成品展示：双列瀑布流（奇偶交替分配 + 参差高度） ===== */
@@ -1388,13 +1507,21 @@
             if (chatBody) {
                 chatBody.scrollTop = chatBody.scrollHeight;
             }
+            /* 兜底：如果滚动容器是整个页面而不是 chat-body，也同步滚到页面底部 */
+            try {
+                window.scrollTo(0, document.body.scrollHeight);
+            } catch (e) {}
         }
 
-        /* 等待浏览器完成重排后再滚动到底部，确保新消息高度已计入 */
+        /* 等待浏览器完成重排后再滚动到底部，多轮重试确保在移动端/不同浏览器下生效 */
         function scheduleScrollBottom() {
-            requestAnimationFrame(function() {
-                scrollChatBottom();
-                setTimeout(scrollChatBottom, 0);
+            const delays = [0, 32, 100, 260];
+            delays.forEach(function(d) {
+                setTimeout(function() {
+                    requestAnimationFrame(function() {
+                        scrollChatBottom();
+                    });
+                }, d);
             });
         }
 
@@ -1415,28 +1542,35 @@
             });
         }
 
-        /* 底部通栏「联系老师」按钮：跳转到联系咨询页面 */
+        /* 底部通栏「联系老师」按钮：打开联系弹窗 */
         const contactFooterBtn = document.getElementById('contactFooterBtn');
-        if (contactFooterBtn) {
-            contactFooterBtn.addEventListener('click', function() {
-                /* 激活联系咨询导航项及页面 */
-                document.querySelectorAll('.nav-item').forEach(function(i) {
-                    i.classList.remove('active');
-                });
-                if (contactNav) contactNav.classList.add('active');
+        const contactDialogMask = document.getElementById('contactDialogMask');
+        const contactDialogCard = document.getElementById('contactDialogCard');
 
-                document.querySelectorAll('.page-section').forEach(function(sec) {
-                    sec.classList.remove('active');
-                });
-                const targetEl = document.getElementById('section-contact');
-                if (targetEl) {
-                    targetEl.classList.add('active');
-                    window.scrollTo(0, 0);
+        function openContactDialog() {
+            if (contactDialogMask) {
+                contactDialogMask.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeContactDialog() {
+            if (contactDialogMask) {
+                contactDialogMask.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+
+        if (contactFooterBtn) {
+            contactFooterBtn.addEventListener('click', openContactDialog);
+        }
+
+        /* 点击遮罩（非卡片区域）关闭弹窗 */
+        if (contactDialogMask) {
+            contactDialogMask.addEventListener('click', function(e) {
+                if (e.target === contactDialogMask) {
+                    closeContactDialog();
                 }
-                setTimeout(function() {
-                    initChat();
-                    scrollChatBottom();
-                }, 60);
             });
         }
     </script>
