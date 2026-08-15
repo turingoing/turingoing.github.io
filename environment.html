@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>环境设施｜教学空间实景</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            position: relative;
+            background: #f5f0e8;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            color: #3d2b1f;
+            line-height: 1.8;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== 汉堡菜单 ===== */
+        .hamburger {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            background: rgba(255, 253, 248, 0.85);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .hamburger:active {
+            background-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .hamburger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background-color: #8b1a1a;
+            margin: 3px 0;
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        /* ===== 遮罩层 ===== */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 200;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ===== 导航抽屉 ===== */
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 75%;
+            max-width: 300px;
+            height: 100%;
+            background-color: #fffdf8;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 300;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+            padding-top: 60px;
+        }
+
+        .drawer.active {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 0 24px 20px;
+            border-bottom: 1px solid #e8d5b5;
+            font-size: 18px;
+            font-weight: 700;
+            color: #8b1a1a;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 8px 0;
+        }
+
+        .nav-item {
+            padding: 16px 24px;
+            font-size: 16px;
+            color: #3d2b1f;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-item:active {
+            background-color: #fdf6ec;
+        }
+
+        .nav-item.active {
+            color: #8b1a1a;
+            background: linear-gradient(90deg, rgba(139, 26, 26, 0.08), transparent);
+            border-left: 3px solid #8b1a1a;
+            padding-left: 21px;
+        }
+
+        /* ===== 公共样式：article / hero ===== */
+        .article {
+            max-width: 680px;
+            margin: 0 auto;
+            background: #fffdf8;
+            overflow: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #8b1a1a 0%, #6b1212 50%, #4a0e0e 100%);
+            padding: 50px 30px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding-top: 70px;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                repeating-linear-gradient(90deg,
+                    transparent, transparent 38px,
+                    rgba(255,215,0,0.06) 38px, rgba(255,215,0,0.06) 40px);
+            pointer-events: none;
+        }
+
+        .hero-pattern {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+
+        .hero-pattern span {
+            width: 26px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .hero-pattern span:nth-child(1) { background: #e8c547; }
+        .hero-pattern span:nth-child(2) { background: #f5f0e8; }
+        .hero-pattern span:nth-child(3) { background: #c9a96e; }
+        .hero-pattern span:nth-child(4) { background: #e8c547; }
+        .hero-pattern span:nth-child(5) { background: #f5f0e8; }
+
+        .hero h1 {
+            color: #f5e6c8;
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1.6;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 .highlight {
+            color: #e8c547;
+        }
+
+        .hero-sub {
+            margin-top: 16px;
+            color: rgba(245, 230, 200, 0.8);
+            font-size: 14px;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-corner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto;
+            border: 2px solid rgba(232, 197, 71, 0.4);
+            border-radius: 50%;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .hero-corner::after {
+            content: "✦";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e8c547;
+            font-size: 20px;
+        }
+
+        /* ===== 环境设施内容 ===== */
+        .env-content {
+            padding: 24px 16px 40px;
+        }
+
+        .env-intro {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #fdf6ec 0%, #fbeede 100%);
+            border-radius: 12px;
+            border-left: 3px solid #8b1a1a;
+            border-right: 3px solid #8b1a1a;
+            font-size: 14px;
+            color: #5c3d2e;
+            line-height: 1.7;
+        }
+
+        .env-intro strong {
+            color: #8b1a1a;
+            font-weight: 700;
+        }
+
+        .env-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .env-card {
+            background: #fffdf8;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(139, 26, 26, 0.08);
+            border: 1px solid #f0e0cc;
+        }
+
+        .env-card.full {
+            grid-column: span 2;
+        }
+
+        .env-card-img {
+            width: 100%;
+            display: block;
+            background: #f5ead6;
+        }
+
+        .env-card-caption {
+            padding: 12px 14px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .env-card-caption::before {
+            content: "✦";
+            color: #c9a96e;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .env-card-caption span {
+            font-size: 14px;
+            color: #3d2b1f;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- 汉堡菜单 -->
+    <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 导航抽屉 -->
+    <div class="drawer" id="drawer">
+        <div class="drawer-header">菜单</div>
+        <ul class="nav-list">
+            <li class="nav-item" data-href="index.html">课程介绍</li>
+            <li class="nav-item" data-href="gallery.html">成品展示</li>
+            <li class="nav-item active" data-href="environment.html">环境设施</li>
+            <li class="nav-item" data-href="contact.html">联系咨询</li>
+        </ul>
+    </div>
+
+    <!-- 环境设施内容 -->
+    <div class="article">
+        <div class="hero">
+            <div class="hero-pattern">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <h1><span class="highlight">环境设施</span><br>教学空间实景</h1>
+            <div class="hero-sub">专业场地 · 舒心体验</div>
+            <div class="hero-corner"></div>
+        </div>
+        <div class="env-content">
+            <div class="env-intro">
+                <strong>专业教学场地</strong><br>
+                宽敞明亮的实操空间，配备齐全的缝纫设备与工具，为学员提供舒适的学习环境
+            </div>
+            <div class="env-grid" id="envGrid">
+                <!-- 由 JS 动态填充 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const drawer = document.getElementById('drawer');
+        const overlay = document.getElementById('overlay');
+
+        function openDrawer() {
+            drawer.classList.add('active');
+            overlay.classList.add('active');
+        }
+
+        function closeDrawer() {
+            drawer.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        hamburger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (drawer.classList.contains('active')) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+        });
+
+        overlay.addEventListener('click', closeDrawer);
+
+        /* 导航项点击：跳转到对应的独立 HTML 文件 */
+        document.querySelectorAll('.nav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                closeDrawer();
+                const href = this.getAttribute('data-href');
+                if (href && href !== window.location.pathname.split('/').pop()) {
+                    window.location.href = href;
+                }
+            });
+        });
+
+        /* ===== 环境设施：双列网格 ===== */
+        const envData = [
+            { img: 'image/index/env5.jpg', title: '缝纫工位', full: true },
+            { img: 'image/index/env4.jpg', title: '打版绘图区', full: true },
+            { img: 'image/index/env1.jpg', title: '熨烫区' , full: true },
+            { img: 'image/index/env3.jpg', title: '学员风采', full: true },
+            { img: 'image/index/env6.jpg', title: '笔记陈列' , full: true },
+            { img: 'image/index/env7.jpg', title: '工具墙' , full: true },
+        ];
+
+        function initEnvGrid() {
+            const grid = document.getElementById('envGrid');
+            if (!grid) return;
+            envData.forEach(function(item) {
+                const card = document.createElement('div');
+                card.className = 'env-card' + (item.full ? ' full' : '');
+                card.innerHTML =
+                    '<img class="env-card-img" src="' + item.img + '" alt="' + item.title + '">' +
+                    '<div class="env-card-caption"><span>' + item.title + '</span></div>';
+                grid.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initEnvGrid();
+        });
+    </script>
+</body>
+</html>
